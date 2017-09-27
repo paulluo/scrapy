@@ -7,11 +7,11 @@ usage:
 
 """
 
-from scrapy.spider import BaseSpider
+from scrapy.spiders import Spider
 from scrapy.http import Request
 
 
-class QPSSpider(BaseSpider):
+class QPSSpider(Spider):
 
     name = 'qps'
     benchurl = 'http://localhost:8880/'
@@ -41,7 +41,7 @@ class QPSSpider(BaseSpider):
 
         slots = int(self.slots)
         if slots > 1:
-            urls = [url.replace('localhost', '127.0.0.%d' % (x + 1)) for x in xrange(slots)]
+            urls = [url.replace('localhost', '127.0.0.%d' % (x + 1)) for x in range(slots)]
         else:
             urls = [url]
 

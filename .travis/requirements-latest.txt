@@ -1,6 +1,0 @@
-pyOpenSSL
-lxml
-twisted
-boto
-Pillow
-django

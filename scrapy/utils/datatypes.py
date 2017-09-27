@@ -6,14 +6,23 @@ This module must not depend on any module outside the Standard Library.
 """
 
 import copy
-from collections import deque, defaultdict
-from itertools import chain
+import six
+import warnings
+from collections import OrderedDict, Mapping
 
-from scrapy.utils.py27 import OrderedDict
+from scrapy.exceptions import ScrapyDeprecationWarning
 
 
 class MultiValueDictKeyError(KeyError):
-    pass
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "scrapy.utils.datatypes.MultiValueDictKeyError is deprecated "
+            "and will be removed in future releases.",
+            category=ScrapyDeprecationWarning,
+            stacklevel=2
+        )
+        super(MultiValueDictKeyError, self).__init__(*args, **kwargs)
+
 
 class MultiValueDict(dict):
     """
@@ -33,6 +42,10 @@ class MultiValueDict(dict):
     single name-value pairs.
     """
     def __init__(self, key_to_list_mapping=()):
+        warnings.warn("scrapy.utils.datatypes.MultiValueDict is deprecated "
+                      "and will be removed in future releases.",
+                      category=ScrapyDeprecationWarning,
+                      stacklevel=2)
         dict.__init__(self, key_to_list_mapping)
 
     def __repr__(self):
@@ -46,7 +59,7 @@ class MultiValueDict(dict):
         try:
             list_ = dict.__getitem__(self, key)
         except KeyError:
-            raise MultiValueDictKeyError, "Key %r not found in %r" % (key, self)
+            raise MultiValueDictKeyError("Key %r not found in %r" % (key, self))
         try:
             return list_[-1]
         except IndexError:
@@ -59,7 +72,7 @@ class MultiValueDict(dict):
         return self.__class__(dict.items(self))
 
     def __deepcopy__(self, memo=None):
-        if memo is None: 
+        if memo is None:
             memo = {}
         result = self.__class__()
         memo[id(self)] = result
@@ -124,7 +137,7 @@ class MultiValueDict(dict):
     def update(self, *args, **kwargs):
         "update() extends rather than replaces existing key lists. Also accepts keyword args."
         if len(args) > 1:
-            raise TypeError, "update expected at most 1 arguments, got %d" % len(args)
+            raise TypeError("update expected at most 1 arguments, got %d" % len(args))
         if args:
             other_dict = args[0]
             if isinstance(other_dict, MultiValueDict):
@@ -135,14 +148,22 @@ class MultiValueDict(dict):
                     for key, value in other_dict.items():
                         self.setlistdefault(key, []).append(value)
                 except TypeError:
-                    raise ValueError, "MultiValueDict.update() takes either a MultiValueDict or dictionary"
-        for key, value in kwargs.iteritems():
+                    raise ValueError("MultiValueDict.update() takes either a MultiValueDict or dictionary")
+        for key, value in six.iteritems(kwargs):
             self.setlistdefault(key, []).append(value)
+
 
 class SiteNode(object):
     """Class to represent a site node (page, image or any other file)"""
 
     def __init__(self, url):
+        warnings.warn(
+            "scrapy.utils.datatypes.SiteNode is deprecated "
+            "and will be removed in future releases.",
+            category=ScrapyDeprecationWarning,
+            stacklevel=2
+        )
+
         self.url = url
         self.itemnames = []
         self.children = []
@@ -203,7 +224,7 @@ class CaselessDict(dict):
         return dict.setdefault(self, self.normkey(key), self.normvalue(def_val))
 
     def update(self, seq):
-        seq = seq.iteritems() if isinstance(seq, dict) else seq
+        seq = seq.items() if isinstance(seq, Mapping) else seq
         iseq = ((self.normkey(k), self.normvalue(v)) for k, v in seq)
         super(CaselessDict, self).update(iseq)
 
@@ -283,3 +304,13 @@ class LocalCache(OrderedDict):
         while len(self) >= self.limit:
             self.popitem(last=False)
         super(LocalCache, self).__setitem__(key, value)
+
+
+class SequenceExclude(object):
+    """Object to test if an item is NOT within some sequence."""
+
+    def __init__(self, seq):
+        self.seq = seq
+
+    def __contains__(self, item):
+        return item not in self.seq

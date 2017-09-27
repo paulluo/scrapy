@@ -1,35 +1,7 @@
-"""
-HttpError Spider Middleware
+import warnings
+from scrapy.exceptions import ScrapyDeprecationWarning
+warnings.warn("Module `scrapy.contrib.spidermiddleware.httperror` is deprecated, "
+              "use `scrapy.spidermiddlewares.httperror` instead",
+              ScrapyDeprecationWarning, stacklevel=2)
 
-See documentation in docs/topics/spider-middleware.rst
-"""
-from scrapy.exceptions import IgnoreRequest
-
-
-class HttpError(IgnoreRequest):
-    """A non-200 response was filtered"""
-
-    def __init__(self, response, *args, **kwargs):
-        self.response = response
-        super(HttpError, self).__init__(*args, **kwargs)
-
-
-class HttpErrorMiddleware(object):
-
-    def process_spider_input(self, response, spider):
-        if 200 <= response.status < 300: # common case
-            return
-        meta = response.meta
-        if 'handle_httpstatus_all' in meta:
-            return
-        if 'handle_httpstatus_list' in meta:
-            allowed_statuses = meta['handle_httpstatus_list']
-        else:
-            allowed_statuses = getattr(spider, 'handle_httpstatus_list', ())
-        if response.status in allowed_statuses:
-            return
-        raise HttpError(response, 'Ignoring non-200 response')
-
-    def process_spider_exception(self, response, exception, spider):
-        if isinstance(exception, HttpError):
-            return []
+from scrapy.spidermiddlewares.httperror import *

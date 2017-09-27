@@ -7,7 +7,10 @@ Debugging Spiders
 This document explains the most common techniques for debugging spiders.
 Consider the following scrapy spider below::
 
-    class MySpider(BaseSpider):
+    import scrapy
+    from myproject.items import MyItem
+
+    class MySpider(scrapy.Spider):
         name = 'myspider'
         start_urls = (
             'http://example.com/page1',
@@ -17,13 +20,13 @@ Consider the following scrapy spider below::
         def parse(self, response):
             # collect `item_urls`
             for item_url in item_urls:
-                yield Request(url=item_url, callback=self.parse_item)
+                yield scrapy.Request(item_url, self.parse_item)
 
         def parse_item(self, response):
             item = MyItem()
             # populate `item` fields
-            yield Request(url=item_details_url, meta={'item': item},
-                callback=self.parse_details)
+            # and extract item_details_url
+            yield scrapy.Request(item_details_url, self.parse_details, meta={'item': item})
 
         def parse_details(self, response):
             item = response.meta['item']
@@ -129,16 +132,13 @@ Logging is another useful option for getting information about your spider run.
 Although not as convenient, it comes with the advantage that the logs will be
 available in all future runs should they be necessary again::
 
-    from scrapy import log
-
     def parse_details(self, response):
         item = response.meta.get('item', None)
         if item:
             # populate more `item` fields
             return item
         else:
-            self.log('No item received for %s' % response.url,
-                level=log.WARNING)
+            self.logger.warning('No item received for %s', response.url)
 
 For more information, check the :ref:`topics-logging` section.
 
